@@ -11,11 +11,13 @@ type Props = {
   extra?: ReactNode;
   /** 底部操作提示 */
   hint?: ReactNode;
+  /** 联机对战时不需要「本局 / 最佳」这两个面板 */
+  hideScores?: boolean;
   children: ReactNode;
 };
 
 /** 每个游戏共用的外框：返回链接、标题、成绩面板和操作提示。 */
-export default function GameFrame({ game, score, best, extra, hint, children }: Props) {
+export default function GameFrame({ game, score, best, extra, hint, hideScores, children }: Props) {
   return (
     <div className="game-page" style={{ '--accent': game.accent } as CSSProperties}>
       <header className="game-bar">
@@ -30,14 +32,18 @@ export default function GameFrame({ game, score, best, extra, hint, children }: 
           <span className="game-subtitle">{game.subtitle}</span>
         </div>
         <div className="game-scores">
-          <div className="pill">
-            <span>{game.scoreLabel}</span>
-            <strong>{score ?? 0}</strong>
-          </div>
-          <div className="pill pill-best">
-            <span>最佳</span>
-            <strong>{best ?? '—'}</strong>
-          </div>
+          {hideScores ? null : (
+            <>
+              <div className="pill">
+                <span>{game.scoreLabel}</span>
+                <strong>{score ?? 0}</strong>
+              </div>
+              <div className="pill pill-best">
+                <span>最佳</span>
+                <strong>{best ?? '—'}</strong>
+              </div>
+            </>
+          )}
           {extra}
         </div>
       </header>

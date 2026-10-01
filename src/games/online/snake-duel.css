@@ -1,0 +1,85 @@
+/* ============================================================
+   贪吃蛇对战（Snake Duel）——只作用于 .snake-duel-* 类名
+   场地 26 × 20 格，画布逻辑坐标 572 × 440，由 width:100% 等比缩放。
+   ============================================================ */
+
+.snake-duel-wrap {
+  position: relative;
+  width: min(100%, 680px);
+}
+
+.snake-duel-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #0a1020;
+  /* 手机上别让方向手势带着页面一起滚 */
+  touch-action: none;
+}
+
+/* ---------- 双方信息条 ---------- */
+
+.snake-duel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+}
+
+.snake-duel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.snake-duel-chip b {
+  color: var(--text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.snake-duel-chip em {
+  font-size: 11px;
+  font-style: normal;
+  opacity: 0.8;
+}
+
+.snake-duel-chip.is-self {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  color: var(--text);
+}
+
+.snake-duel-chip.is-out {
+  opacity: 0.6;
+}
+
+.snake-duel-chip.is-out em {
+  color: #fca5a5;
+  opacity: 1;
+}
+
+.snake-duel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.snake-duel-chip.is-p1 .snake-duel-dot {
+  background: #4ade80;
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.75);
+}
+
+.snake-duel-chip.is-p2 .snake-duel-dot {
+  background: #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.75);
+}

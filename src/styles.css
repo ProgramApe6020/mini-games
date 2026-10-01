@@ -748,3 +748,326 @@ button {
     margin-left: auto;
   }
 }
+
+/* ============================================================
+   双人联机：首页分区、房间大厅、对局状态栏
+   ============================================================ */
+
+.section {
+  margin-top: 46px;
+}
+
+.section:first-child {
+  margin-top: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.section-head h2 {
+  font-size: 19px;
+  letter-spacing: 0.01em;
+}
+
+.section-head p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.card-tag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.card-note {
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.net-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.net-badge.is-online {
+  border-color: color-mix(in srgb, #4ade80 45%, transparent);
+  color: #86efac;
+}
+
+/* ---------- 房间大厅 ---------- */
+
+.lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: min(100%, 480px);
+  padding: 26px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  text-align: center;
+}
+
+.lobby-lead {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.lobby-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lobby-or {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-input {
+  width: 118px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-family: Consolas, monospace;
+  font-size: 15px;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.join-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.lobby-error {
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.lobby-hint {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.lobby-note {
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.lobby-note strong {
+  color: var(--text);
+}
+
+.lobby-tips {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+  text-align: left;
+}
+
+.room-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.room-label {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+
+.room-code {
+  font-family: Consolas, monospace;
+  font-size: 40px;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-shadow: 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.peer-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.peer-chip {
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  font-size: 13px;
+}
+
+.peer-chip.is-self {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.peer-chip.is-empty {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.invite-url {
+  max-width: 100%;
+  color: var(--muted);
+  font-family: Consolas, monospace;
+  font-size: 11px;
+  word-break: break-all;
+  opacity: 0.8;
+}
+
+/* ---------- 对局中的状态栏 ---------- */
+
+.duel-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+}
+
+.duel-room {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-family: Consolas, monospace;
+  font-size: 12px;
+}
+
+.duel-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.duel-score b {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.duel-score em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.duel-score strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.duel-score.is-self {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.duel-score.is-self strong {
+  color: var(--accent);
+}
+
+.duel-score.is-offline {
+  opacity: 0.55;
+}
+
+.duel-unit {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.duel-status {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---------- 井字棋棋盘 ---------- */
+
+.ttt-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(84vw, 330px);
+}
+
+.ttt-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #1b2437, #141b2c);
+  font-size: clamp(30px, 9vw, 46px);
+  font-weight: 700;
+  line-height: 1;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+
+.ttt-cell.is-playable:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, #141b2c);
+  transform: translateY(-2px);
+}
+
+.ttt-cell:disabled {
+  cursor: default;
+}
+
+.ttt-cell.mark-1 {
+  color: #7dd3fc;
+  text-shadow: 0 0 18px rgba(125, 211, 252, 0.5);
+}
+
+.ttt-cell.mark-2 {
+  color: #f9a8d4;
+  text-shadow: 0 0 18px rgba(249, 168, 212, 0.5);
+}

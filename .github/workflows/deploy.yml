@@ -41,6 +41,11 @@ jobs:
 
       - name: 构建静态文件
         run: npm run build
+        env:
+          # 联机对战用的 Supabase 配置（在仓库 Settings → Secrets and variables → Actions 里设置）
+          # 没配置也能构建，只是联机游戏会退化成「同浏览器双标签」模式
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: 配置 Pages
         uses: actions/configure-pages@v5

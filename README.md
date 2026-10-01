@@ -87,6 +87,53 @@ git push
 - **页面空白、控制台报资源 404**：说明资源的基路径不对。本项目用的是 `base: './'`，
   这种情况下不应该出现；如果你手动改过 `vite.config.ts`，把它改回 `'./'`。
 
+## 双人联机对战（Supabase 配置）
+
+首页「双人联机对战」分区的 6 个游戏需要一条实时通道。项目用 **Supabase Realtime**
+（只用广播 + 在线状态，不建表、不存数据）。**没配置也能用**——会自动退化成
+「同一浏览器双标签页」模式，打开两个标签页就能自己试玩。
+
+配置步骤：
+
+1. 打开 <https://supabase.com>，用 GitHub 账号登录，新建一个项目
+   （Region 选 Southeast Asia (Singapore)，数据库密码随便设，我们用不到数据库）
+2. 等 1～2 分钟初始化完成，进入 **Project Settings → API Keys**，复制两样东西：
+   **Project URL**（形如 `https://abcdefgh.supabase.co`）和 **anon / public** key
+3. 本地开发：把 `.env.example` 复制成 `.env.local`，填上这两个值：
+
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+   ```
+
+4. 线上部署：在 GitHub 仓库 **Settings → Secrets and variables → Actions** 里
+   新建两个 Repository secret，名字要完全一致：
+
+   | Secret 名称 | 值 |
+   | --- | --- |
+   | `VITE_SUPABASE_URL` | 你的 Project URL |
+   | `VITE_SUPABASE_ANON_KEY` | 你的 anon key |
+
+   然后重新跑一次 Actions（或再 push 一次）即可生效。
+
+> **anon key 放在前端安全吗？** 安全。它本来就是设计成随前端下发给浏览器的，
+> 只代表「匿名访客」身份；本项目没有建任何表，所以它只能用来收发房间内的实时消息。
+> 想轮换：换掉 Supabase 的 key，再更新 `.env.local` 和仓库 secret 即可。
+>
+> 需要知道的边界：拿到 anon key 的人如果**猜到房间码**，理论上可以进同一个房间旁观。
+> 房间码是 4 位随机字符（约 100 万种组合），对休闲对战够用；如果要做正式比赛，
+> 可以在 Supabase 里给 `realtime.messages` 配置授权策略来限制。
+
+### 怎么和朋友对战
+
+1. 打开任意一个联机游戏，点「创建房间」，会得到 4 位房间码和一条邀请链接
+2. 把链接发给朋友（对方打开即进入同一房间），或让对方输入房间码加入
+3. 两人到齐自动开局；中途刷新页面也能回到房间
+4. 房间页右上角会显示当前通道：`🌐 联机模式` 或 `🖥 双标签模式`
+
+想绕开 Supabase 用同一浏览器测试：把地址改成
+`#/gomoku?room=TEST&role=host&net=local`，再开另一个标签页用 `role=guest` 打开。
+
 ## 目录结构
 
 ```
@@ -100,20 +147,29 @@ mini-games/
 │  ├─ App.tsx                     # 首页 + 按 hash 路由切换到具体游戏
 │  ├─ styles.css                  # 全部样式
 │  ├─ lib/
-│  │  ├─ router.ts                # 极简 hash 路由
+│  │  ├─ router.ts                # 极简 hash 路由（支持 ?room= 这类参数）
 │  │  ├─ storage.ts               # localStorage 里的最佳成绩
-│  │  ├─ canvas.ts                # 圆角矩形 / 高清屏适配
-│  │  └─ math.ts                  # 数值裁剪等小工具
-│  ├─ components/GameFrame.tsx    # 游戏页共用的外框（标题、成绩、提示）
+│  │  ├─ canvas.ts / math.ts      # 画布与数值小工具
+│  │  ├─ config.ts                # 读取 Supabase 配置
+│  │  └─ net/                     # 联机传输层：Supabase / 同浏览器双标签
+│  ├─ components/
+│  │  ├─ GameFrame.tsx            # 游戏页共用的外框（标题、成绩、提示）
+│  │  └─ RoomGate.tsx             # 房间大厅、等待页、对局状态栏
 │  └─ games/
-│     ├─ registry.ts              # 游戏清单：首页卡片和路由都读这里
+│     ├─ registry.ts              # 游戏清单：单人 4 个 + 联机 6 个
 │     ├─ Snake.tsx    + snake/logic.ts      # 界面 + 纯逻辑
 │     ├─ Game2048.tsx + g2048/logic.ts      # 界面 + 纯逻辑
 │     ├─ Breakout.tsx + breakout/logic.ts   # 界面 + 物理逻辑
-│     └─ Memory.tsx               # 逻辑较短，直接写在组件里
+│     ├─ Memory.tsx               # 逻辑较短，直接写在组件里
+│     └─ online/                  # 双人联机对战
+│        ├─ TicTacToe.tsx / Gomoku.tsx / ReactionDuel.tsx ...
+│        ├─ tictactoe/logic.ts 等 # 各游戏的纯逻辑
+│        └─ *.css                 # 各游戏自己的样式
 └─ tests/
    ├─ logic.test.ts               # 2048 与贪吃蛇（14 个用例）
-   └─ breakout.test.ts            # 打砖块物理（13 个用例）
+   ├─ breakout.test.ts            # 打砖块物理（13 个用例）
+   ├─ tictactoe.test.ts           # 井字棋（6 个用例）
+   └─ ...                         # 其它联机游戏的逻辑测试
 ```
 
 > 测试用的是 Node 内置测试运行器，Node 22.6 以上可以直接运行 `.ts` 文件，

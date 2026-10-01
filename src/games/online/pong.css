@@ -1,0 +1,45 @@
+/* 乒乓球（Pong）联机对战——竖球场、霓虹风格。所有类名都用 pong- 前缀。 */
+
+.pong-wrap {
+  position: relative;
+  /* 逻辑尺寸 480 × 640（0.75），高度受限时按 0.75 反推宽度 */
+  width: min(100%, 400px, calc((100dvh - 340px) * 0.75));
+  touch-action: none;
+}
+
+.pong-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #070b16;
+  box-shadow: 0 0 46px -22px var(--accent);
+  cursor: none;
+  touch-action: none;
+}
+
+/* 结束遮罩：沿用全局 .overlay 的布局，这里只补霓虹描边 */
+.pong-overlay {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: inset 0 0 70px -26px var(--accent);
+}
+
+.pong-final {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+
+/* 底部状态文字：固定一点高度，免得来回跳动 */
+.pong-status {
+  min-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pong-canvas {
+    box-shadow: none;
+  }
+}
