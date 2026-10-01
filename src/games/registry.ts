@@ -135,7 +135,7 @@ export const GAMES: GameMeta[] = [
     emoji: '🏓',
     tagline: '实时对打，先拿 7 分者胜。',
     accent: '#22d3ee',
-    controls: '上下移动鼠标 / 触屏拖动控制球拍 · ↑ ↓ 或 W S · 空格发球',
+    controls: '左右拖动鼠标 / 触屏移动球拍 · ← → 或 A D · 空格立即发球 · 先到 7 分获胜',
     scoreLabel: '得分',
     scoreMode: 'max',
     category: 'duel',
