@@ -1,0 +1,11 @@
+# 统一换行符：仓库里保存 LF，检出时按平台习惯处理，避免 Windows 上出现整文件 diff
+* text=auto
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

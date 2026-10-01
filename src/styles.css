@@ -1,0 +1,740 @@
+/* ============================================================
+   小游戏合集 —— 全局样式
+   组织方式：变量与基础 → 首页 → 通用游戏外框 → 各游戏专属样式
+   ============================================================ */
+
+:root {
+  --bg: #070b16;
+  --panel: rgba(255, 255, 255, 0.045);
+  --panel-strong: rgba(255, 255, 255, 0.08);
+  --line: rgba(255, 255, 255, 0.1);
+  --text: #e8edf7;
+  --muted: #93a1bd;
+  --radius: 18px;
+  --accent: #60a5fa;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 720px at 8% -12%, #1b2a4d 0%, transparent 58%),
+    radial-gradient(900px 640px at 96% -4%, #3a1b52 0%, transparent 52%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ---------- 通用按钮 ---------- */
+
+.btn {
+  padding: 9px 16px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-size: 14px;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s, opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--panel-strong);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 45%, #7c3aed));
+  color: #06101f;
+  font-weight: 700;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+/* ---------- 首页 ---------- */
+
+.home {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 64px 20px 48px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 42px;
+}
+
+.hero-kicker {
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin-bottom: 16px;
+  font-size: clamp(34px, 6vw, 58px);
+  letter-spacing: -0.02em;
+  background: linear-gradient(100deg, #e8edf7 8%, #7dd3fc 46%, #c084fc 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  max-width: 620px;
+  margin: 0 auto;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.062), rgba(255, 255, 255, 0.018));
+  overflow: hidden;
+  transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, var(--accent), transparent 62%);
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 44px -24px var(--accent);
+}
+
+.card:hover::after {
+  opacity: 0.95;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-emoji {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.card-best {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card-best strong {
+  color: var(--accent);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 21px;
+}
+
+.card h2 span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.card p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.card-play {
+  margin-top: auto;
+  padding-top: 10px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.footer-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- 游戏页外框 ---------- */
+
+.game-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: min(880px, 100%);
+  margin: 0 auto;
+  padding: 26px 18px 48px;
+}
+
+.game-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.back-link {
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 14px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.back-link:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.game-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-right: auto;
+}
+
+.game-title h1 {
+  font-size: 22px;
+}
+
+.game-emoji {
+  font-size: 22px;
+}
+
+.game-subtitle {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.game-scores {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.pill span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pill strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pill-best strong {
+  color: var(--accent);
+}
+
+.game-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.game-hint {
+  max-width: 620px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.tool-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: 14px;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  border-radius: inherit;
+  background: rgba(7, 11, 22, 0.78);
+  backdrop-filter: blur(4px);
+  text-align: center;
+}
+
+.overlay h2 {
+  font-size: 22px;
+}
+
+.overlay p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---------- 贪吃蛇 ---------- */
+
+.snake-wrap {
+  position: relative;
+  width: min(100%, 480px, calc(100dvh - 300px));
+}
+
+.snake-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #0a1020;
+  touch-action: none;
+}
+
+.dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 54px);
+  grid-template-rows: repeat(3, 54px);
+  gap: 8px;
+}
+
+.dpad button {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  font-size: 20px;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.dpad button:hover {
+  border-color: var(--accent);
+}
+
+.dpad button:active {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.dpad-up {
+  grid-area: 1 / 2;
+}
+
+.dpad-left {
+  grid-area: 2 / 1;
+}
+
+.dpad-right {
+  grid-area: 2 / 3;
+}
+
+.dpad-down {
+  grid-area: 3 / 2;
+}
+
+/* ---------- 2048 ---------- */
+
+.g2048-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.g2048-board {
+  --gap: 10px;
+  --board: min(92vw, 420px, calc(100dvh - 320px));
+  --cell: calc((var(--board) - var(--gap) * 5) / 4);
+  position: relative;
+  width: var(--board);
+  height: var(--board);
+  padding: var(--gap);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #1b2437, #141b2c);
+  border: 1px solid var(--line);
+  touch-action: none;
+  user-select: none;
+}
+
+.g2048-cells {
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell));
+  grid-template-rows: repeat(4, var(--cell));
+  gap: var(--gap);
+}
+
+.g2048-cell {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.g2048-tile {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  width: var(--cell);
+  height: var(--cell);
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: calc(var(--cell) * 0.4);
+  font-variant-numeric: tabular-nums;
+  background: #2c3a55;
+  color: #e8edf7;
+  transform: translate(
+    calc(var(--c) * (var(--cell) + var(--gap))),
+    calc(var(--r) * (var(--cell) + var(--gap)))
+  );
+  transition: transform 110ms ease-out, background-color 0.15s;
+  will-change: transform;
+}
+
+.g2048-tile[data-v='2'] {
+  background: #2f3d59;
+}
+
+.g2048-tile[data-v='4'] {
+  background: #37507a;
+}
+
+.g2048-tile[data-v='8'] {
+  background: #2563eb;
+}
+
+.g2048-tile[data-v='16'] {
+  background: #1d4ed8;
+}
+
+.g2048-tile[data-v='32'] {
+  background: #0ea5e9;
+}
+
+.g2048-tile[data-v='64'] {
+  background: #06b6d4;
+}
+
+.g2048-tile[data-v='128'] {
+  background: #14b8a6;
+}
+
+.g2048-tile[data-v='256'] {
+  background: #22c55e;
+}
+
+.g2048-tile[data-v='512'] {
+  background: #84cc16;
+}
+
+.g2048-tile[data-v='1024'] {
+  background: #eab308;
+}
+
+.g2048-tile[data-v='2048'] {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  box-shadow: 0 0 24px -4px rgba(245, 158, 11, 0.8);
+}
+
+.g2048-tile[data-v='4096'],
+.g2048-tile[data-v='8192'] {
+  background: linear-gradient(135deg, #ef4444, #a855f7);
+  box-shadow: 0 0 26px -4px rgba(168, 85, 247, 0.85);
+}
+
+.g2048-tile span {
+  display: block;
+}
+
+.g2048-tile.is-new span {
+  animation: tile-pop 0.16s ease-out;
+}
+
+.g2048-tile.is-merged span {
+  animation: tile-merge 0.2s ease-out;
+}
+
+@keyframes tile-pop {
+  from {
+    transform: scale(0.3);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes tile-merge {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---------- 打砖块 ---------- */
+
+.breakout-wrap {
+  position: relative;
+  width: min(100%, 420px, calc((100dvh - 300px) * 0.774));
+  touch-action: none;
+}
+
+.breakout-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: none;
+  touch-action: none;
+}
+
+/* ---------- 记忆翻牌 ---------- */
+
+.memory-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.memory-levels {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.memory-grid {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 520px);
+}
+
+.memory-card {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  border: 0;
+  background: none;
+  perspective: 800px;
+}
+
+.memory-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 13px;
+  transform-style: preserve-3d;
+  transition: transform 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.memory-card.is-open .memory-inner {
+  transform: rotateY(180deg);
+}
+
+.memory-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  font-size: clamp(20px, 5.4vw, 32px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.memory-front {
+  background: linear-gradient(150deg, #1d2740, #141b2c);
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.memory-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 26%, #131b2e), #131b2e);
+}
+
+.memory-card.is-matched {
+  cursor: default;
+}
+
+.memory-card.is-matched .memory-back {
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 22px -8px var(--accent);
+}
+
+.memory-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.win-text {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- 无障碍 / 动效偏好 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .home {
+    padding-top: 44px;
+  }
+
+  .game-title {
+    order: 3;
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .game-scores {
+    order: 2;
+    margin-left: auto;
+  }
+}
