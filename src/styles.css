@@ -242,6 +242,16 @@ button {
   font-size: 13px;
 }
 
+.footer-link {
+  border-bottom: 1px dashed transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.footer-link:hover {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
 /* ---------- 游戏页外框 ---------- */
 
 .game-page {

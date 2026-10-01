@@ -3,6 +3,9 @@
 一个用 **React + TypeScript + Vite** 写的小游戏网站，包含四个键盘 / 触屏都能玩的小游戏，
 构建成纯静态文件后由 **GitHub Pages** 免费托管。
 
+- 🌐 在线访问：<https://programape6020.github.io/mini-games/>
+- 📦 仓库地址：<https://github.com/ProgramApe6020/mini-games>
+
 | 游戏 | 说明 | 最佳成绩 |
 | --- | --- | --- |
 | 🐍 贪吃蛇 | 吃果实变长，速度随分数加快 | 分数越高越好 |

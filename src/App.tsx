@@ -67,7 +67,14 @@ function Home() {
         <button type="button" className="btn" onClick={handleClear}>
           清除本地成绩
         </button>
-        <span className="footer-note">托管于 GitHub Pages</span>
+        <a
+          className="footer-note footer-link"
+          href="https://github.com/ProgramApe6020/mini-games"
+          target="_blank"
+          rel="noreferrer"
+        >
+          源码在 GitHub · 托管于 GitHub Pages
+        </a>
       </footer>
     </div>
   );
