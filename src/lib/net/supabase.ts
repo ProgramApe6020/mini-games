@@ -27,10 +27,17 @@ export class SupabaseTransport implements Transport {
 
   private currentStatus: TransportStatus = 'offline';
 
-  constructor(url: string, key: string) {
+  /**
+   * @param vsn 协议版本。默认用 supabase-js 自带的 2.0.0（二进制序列化）；
+   *            传入 '1.0.0' 会改用 JSON 序列化 —— 自动化测试里用来观察明文消息。
+   */
+  constructor(url: string, key: string, vsn?: string) {
     this.client = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
-      realtime: { params: { eventsPerSecond: 25 } },
+      realtime: {
+        params: { eventsPerSecond: 25 },
+        ...(vsn ? { vsn } : {}),
+      },
     });
   }
 
@@ -41,6 +48,7 @@ export class SupabaseTransport implements Transport {
 
     const channel = this.client.channel(`mini-games:${room}`, {
       config: {
+        // self:false —— 不需要收到自己发的消息（本地已经应用过了）
         broadcast: { self: false, ack: false },
         presence: { key: self.id },
       },
@@ -97,7 +105,35 @@ export class SupabaseTransport implements Transport {
     const channel = this.channel;
     if (!self || !channel) return;
     const payload: NetMessage = { from: self.id, seat: self.seat, type, data, at: Date.now() };
-    void channel.send({ type: 'broadcast', event: 'msg', payload });
+    void this.deliver(channel, payload);
+  }
+
+  /**
+   * 发送一条广播。
+   *
+   * 优先走 WebSocket（低延迟，适合乒乓球/贪吃蛇这类实时游戏）；
+   * 因为开了 `ack: true`，发送结果是可以感知的 —— 一旦超时或报错，
+   * 就退回到 Supabase 的 REST 广播接口，避免因为 socket 抖动丢消息。
+   */
+  private async deliver(
+    channel: RealtimeChannel,
+    payload: NetMessage,
+  ): Promise<void> {
+    try {
+      const result = await channel.send({ type: 'broadcast', event: 'msg', payload });
+      if (result === 'ok') return;
+    } catch {
+      /* 下面走回退 */
+    }
+
+    const httpSend = (channel as { httpSend?: (event: string, payload: unknown) => Promise<unknown> })
+      .httpSend;
+    if (typeof httpSend !== 'function') return;
+    try {
+      await httpSend.call(channel, 'msg', payload);
+    } catch {
+      /* 两种通道都失败就只能丢弃这一条，下一帧会带上最新状态 */
+    }
   }
 
   onMessage(handler: (message: NetMessage) => void): () => void {

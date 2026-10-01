@@ -33,10 +33,10 @@ export function resolveNetMode(params: URLSearchParams): NetMode {
  * Supabase 客户端有 200 多 kB，而只玩单人游戏的人根本用不到，
  * 所以这里用动态 import —— 打包时会单独切出一个 chunk，只有真正进联机房间才下载。
  */
-export async function createTransport(mode: NetMode): Promise<Transport> {
+export async function createTransport(mode: NetMode, vsn?: string): Promise<Transport> {
   if (mode === 'supabase' && supabaseConfig.configured) {
     const { SupabaseTransport } = await import('./supabase');
-    return new SupabaseTransport(supabaseConfig.url, supabaseConfig.key);
+    return new SupabaseTransport(supabaseConfig.url, supabaseConfig.key, vsn);
   }
   return new LocalTransport();
 }
@@ -118,8 +118,10 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
       if (disposed) return;
 
       void (async () => {
-        const mode = resolveNetMode(new URLSearchParams(paramsKey));
-        const next = await createTransport(mode);
+        const search = new URLSearchParams(paramsKey);
+        const mode = resolveNetMode(search);
+        // ?vsn=1.0.0 可以让 Supabase 客户端改用 JSON 序列化（自动化测试用）
+        const next = await createTransport(mode, search.get('vsn') ?? undefined);
         if (disposed) {
           next.disconnect();
           return;

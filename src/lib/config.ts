@@ -12,11 +12,20 @@
 const rawUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').trim();
 const rawKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim();
 
+/**
+ * 地址是否可用：正式环境必须是 https；
+ * 另外放行本机 http 端点，方便自托管 Supabase 或本地联调测试。
+ */
+function isUsableUrl(url: string): boolean {
+  if (url.startsWith('https://')) return true;
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(url);
+}
+
 export const supabaseConfig = {
   url: rawUrl,
   key: rawKey,
   /** 是否拿到了可用的 Supabase 配置 */
-  configured: rawUrl.startsWith('https://') && rawKey.length > 20,
+  configured: isUsableUrl(rawUrl) && rawKey.length > 20,
 };
 
 export type NetMode = 'supabase' | 'local';
