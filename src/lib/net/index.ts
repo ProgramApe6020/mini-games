@@ -1,15 +1,19 @@
 /**
- * 传输层工厂 + 联机房间 Hook。
+ * 传输层工厂 + 多人房间 Hook。
  *
- * 游戏组件只需要 `const duel = useDuel(...)`，不用关心底层是 Supabase 还是
+ * 游戏组件只需要 `const net = useNetRoom(...)`，不用关心底层是 Supabase 还是
  * 同浏览器多标签页；没有配置 Supabase 时会自动降级。
+ *
+ * 关于座位：传输层只负责「谁在线」，**座位的权威分配在房主手里**
+ * （房主按在线顺序把队友排成 1/2/3 号，并通过 roster 消息广播出去）。
+ * 这里从 URL 读到的座位只是连上前大厅里的临时显示。
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { netModeFromLocation, supabaseConfig, type NetMode } from '../config';
 import { LocalTransport } from './local';
 import {
+  MAX_SEATS,
   getOrCreatePlayerId,
-  seatLabel,
   type NetMessage,
   type PeerInfo,
   type Seat,
@@ -29,9 +33,7 @@ export function resolveNetMode(params: URLSearchParams): NetMode {
 
 /**
  * 创建传输层。
- *
- * Supabase 客户端有 200 多 kB，而只玩单人游戏的人根本用不到，
- * 所以这里用动态 import —— 打包时会单独切出一个 chunk，只有真正进联机房间才下载。
+ * Supabase 客户端有 200 多 kB，只有真正进房间才需要，所以用动态 import 单独分包。
  */
 export async function createTransport(mode: NetMode, vsn?: string): Promise<Transport> {
   if (mode === 'supabase' && supabaseConfig.configured) {
@@ -41,49 +43,57 @@ export async function createTransport(mode: NetMode, vsn?: string): Promise<Tran
   return new LocalTransport();
 }
 
-export type DuelStatus = 'idle' | 'connecting' | 'waiting' | 'ready' | 'full' | 'error';
+export type RoomStatus = 'idle' | 'connecting' | 'waiting' | 'ready' | 'overfull' | 'error';
 
-export type Duel = {
-  /** 房间码，null 表示还没进入房间 */
+export type NetRoom = {
   room: string | null;
-  status: DuelStatus;
+  status: RoomStatus;
   transportKind: TransportKind;
-  /** 是否拿到了 Supabase 配置（false 表示在用同浏览器双标签模式） */
   configured: boolean;
   selfId: string;
+  /** 临时座位（房主发的 roster 才是权威） */
   selfSeat: Seat;
   isHost: boolean;
+  /** 在线成员（含自己） */
   peers: PeerInfo[];
-  opponent: PeerInfo | null;
+  /** 除自己以外的队友 */
+  teammates: PeerInfo[];
+  isFull: boolean;
   send: (type: string, data?: unknown) => void;
-  /** 邀请对手的链接 */
   inviteUrl: string;
 };
 
 type Options = {
   gameId: string;
   room: string | null;
-  seat: Seat;
+  /** 建房者传 host，通过邀请链接进来的人传 guest */
+  role: 'host' | 'guest' | null;
+  /** 大厅里显示的临时名字 */
+  name: string;
   params: URLSearchParams;
-  /**
-   * 收到对手消息时回调。第二个参数是稳定的发送接口，
-   * 这样在回调里可以直接回复消息，不必等 useDuel 返回后再拿 send。
-   */
-  onMessage?: (message: NetMessage, api: DuelApi) => void;
+  onMessage?: (message: NetMessage, api: NetApi) => void;
+  onPeers?: (peers: PeerInfo[]) => void;
 };
 
 /** 传给消息回调的稳定接口。 */
-export type DuelApi = {
+export type NetApi = {
   send: (type: string, data?: unknown) => void;
 };
 
-export function useDuel({ gameId, room, seat, params, onMessage }: Options): Duel {
-  // 允许用 ?pid=xxx 指定玩家身份。默认从 sessionStorage 取（每个标签页一个，
-  // 刷新不变）；显式指定的场景主要是自动化测试——同一个标签页里的两个 iframe
-  // 共享 sessionStorage，不指定就会拿到同一个 id。
+export function useNetRoom({
+  gameId,
+  room,
+  role,
+  name,
+  params,
+  onMessage,
+  onPeers,
+}: Options): NetRoom {
+  // ?pid=xxx 指定身份，主要给自动化测试用（同一标签页里的多个 iframe 共享 sessionStorage）
   const forcedId = params.get('pid');
   const playerId = useMemo(() => forcedId ?? getOrCreatePlayerId(), [forcedId]);
   const handlerRef = useRef(onMessage);
+  const peersHandlerRef = useRef(onPeers);
   const transportRef = useRef<Transport | null>(null);
   const [peers, setPeers] = useState<PeerInfo[]>([]);
   const [transportStatus, setTransportStatus] = useState<TransportStatus>('offline');
@@ -95,12 +105,14 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
     transportRef.current?.send(type, data);
   }, []);
 
-  const api = useMemo<DuelApi>(() => ({ send }), [send]);
+  const api = useMemo<NetApi>(() => ({ send }), [send]);
 
   useEffect(() => {
     handlerRef.current = onMessage;
-  }, [onMessage]);
+    peersHandlerRef.current = onPeers;
+  }, [onMessage, onPeers]);
 
+  const provisionalSeat: Seat = role === 'guest' ? 1 : 0;
   const paramsKey = params.toString();
 
   useEffect(() => {
@@ -112,15 +124,15 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
     let disposed = false;
     let transport: Transport | null = null;
 
-    // 少量延迟再连接：React 严格模式下 effect 会执行两次，
-    // 这样可以避免立刻连上又断开，让对手那边看到在线状态闪一下。
+    // 稍微延迟再连接：React 严格模式下 effect 会跑两次，
+    // 这样可以避免刚连上就断开，让队友那边看到在线状态闪一下。
     const timer = window.setTimeout(() => {
       if (disposed) return;
 
       void (async () => {
         const search = new URLSearchParams(paramsKey);
         const mode = resolveNetMode(search);
-        // ?vsn=1.0.0 可以让 Supabase 客户端改用 JSON 序列化（自动化测试用）
+        // ?vsn=1.0.0 让 Supabase 客户端改用 JSON 序列化（自动化测试用）
         const next = await createTransport(mode, search.get('vsn') ?? undefined);
         if (disposed) {
           next.disconnect();
@@ -135,13 +147,15 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
           if (!disposed) handlerRef.current?.(message, api);
         });
         next.onPeers((list) => {
-          if (!disposed) setPeers(list);
+          if (disposed) return;
+          setPeers(list);
+          peersHandlerRef.current?.(list);
         });
         next.onStatus((status) => {
           if (!disposed) setTransportStatus(status);
         });
 
-        void next.connect(room, { id: playerId, seat, name: seatLabel(seat) });
+        void next.connect(room, { id: playerId, seat: provisionalSeat, name });
       })();
     }, 60);
 
@@ -153,20 +167,17 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
       setPeers([]);
       setTransportStatus('offline');
     };
-  }, [room, seat, playerId, paramsKey, api]);
+  }, [room, provisionalSeat, playerId, name, paramsKey, api]);
 
-  const status: DuelStatus = useMemo(() => {
+  const status: RoomStatus = useMemo(() => {
     if (!room) return 'idle';
     if (transportStatus === 'error') return 'error';
     if (transportStatus !== 'online') return 'connecting';
-    if (peers.length > 2) return 'full';
+    if (peers.length > MAX_SEATS) return 'overfull';
     return peers.length >= 2 ? 'ready' : 'waiting';
   }, [room, transportStatus, peers.length]);
 
-  const opponent = useMemo(
-    () => peers.find((peer) => peer.id !== playerId) ?? null,
-    [peers, playerId],
-  );
+  const teammates = useMemo(() => peers.filter((peer) => peer.id !== playerId), [peers, playerId]);
 
   const inviteUrl = useMemo(() => {
     if (!room) return '';
@@ -180,16 +191,17 @@ export function useDuel({ gameId, room, seat, params, onMessage }: Options): Due
     transportKind,
     configured: supabaseConfig.configured,
     selfId: playerId,
-    selfSeat: seat,
-    isHost: seat === 0,
+    selfSeat: provisionalSeat,
+    isHost: role !== 'guest',
     peers,
-    opponent,
+    teammates,
+    isFull: peers.length >= MAX_SEATS,
     send,
     inviteUrl,
   };
 }
 
-/** 从路由参数里解析房间码和座位。 */
+/** 从路由参数里解析房间码与角色。 */
 export function useRoomParams(params: URLSearchParams): {
   room: string | null;
   role: 'host' | 'guest' | null;

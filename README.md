@@ -1,189 +1,151 @@
-# 小游戏合集 · Mini Games
+# 地牢远征 · 多人合作 2D 地牢闯关
 
-一个用 **React + TypeScript + Vite** 写的小游戏网站，包含四个键盘 / 触屏都能玩的小游戏，
-构建成纯静态文件后由 **GitHub Pages** 免费托管。
+一个最多 **4 人组队**的实时合作地牢游戏。清光一层的怪物才能下楼，层数越深怪越凶；
+倒下后 6 秒在入口自动复活，但**全员同时倒地**这一趟就结束了。
 
-- 🌐 在线访问：<https://programape6020.github.io/mini-games/>
-- 📦 仓库地址：<https://github.com/ProgramApe6020/mini-games>
+**在线玩：** https://programape6020.github.io/mini-games/
 
-| 游戏 | 说明 | 最佳成绩 |
-| --- | --- | --- |
-| 🐍 贪吃蛇 | 吃果实变长，速度随分数加快 | 分数越高越好 |
-| 🔢 2048 | 合并相同数字，可撤销一步 | 分数越高越好 |
-| 🧱 打砖块 | 多关卡，砖块越打越多 | 分数越高越好 |
-| 🃏 记忆翻牌 | 三种难度，找到所有配对 | 步数越少越好 |
+---
 
-## 特点
+## 玩法
 
-- **零后端**：全部逻辑跑在浏览器里，成绩存在 `localStorage`，不收集任何数据。
-- **无需改配置就能部署**：`vite.config.ts` 里使用相对基路径 `base: './'`，
-  所以部署到 `https://<用户名>.github.io/<仓库名>/` 这种子路径下也能正常加载资源，
-  换仓库名、换自定义域名都不用改代码。
-- **hash 路由**：页面地址是 `#/snake` 这样带井号的，刷新不会 404 —— 静态托管不需要服务端配合。
-- **游戏逻辑与界面分离**：`src/games/*/logic.ts` 是纯函数，可以直接跑单元测试
-  （2048 的合并、贪吃蛇的碰撞、打砖块的物理都有覆盖，共 27 个用例）。
-- **自带测试与类型检查**：`npm run check` 一次跑完类型检查、单元测试和构建。
+- **目标**：一层一层往下打，撑得越深、得分越高
+- **组队**：2～4 人，房主创建房间后把邀请链接发给朋友
+- **战斗**：近战挥砍（有攻击弧与击退），冲刺可以拉开距离或穿怪
+- **推进**：本层怪物清空后，走到**楼梯**上停留片刻进入下一层（每 3 层有一个 Boss）
+- **倒地**：血量归零后倒地 6 秒，然后在入口复活并恢复 60% 血量；全员同时倒地即失败
+- **掉落**：爱心回血、金币加分、蓝色药水回满
+
+### 操作
+
+| 动作 | 按键 |
+| --- | --- |
+| 移动 | `W` `A` `S` `D` 或方向键 |
+| 瞄准 | 鼠标 |
+| 攻击 | 鼠标左键 或 `J` |
+| 冲刺 | `空格` / `K` / 鼠标右键 |
+
+---
+
+## 和朋友一起玩
+
+1. 打开站点 → 填个名字 → **创建房间**
+2. 点「复制邀请链接」发给朋友（微信 / QQ 都行），对方打开即进入同一队
+3. 房主点「进入地牢」开始；中途加入的人会自动被编入队伍
+
+> 站点右上角会显示当前通道：
+> - `🌐 联机模式` —— 走 Supabase Realtime，**不同网络的朋友也能一起玩**
+> - `🖥 本地多标签` —— 没配置 Supabase 时的降级模式，用同一浏览器的多个标签页组队
+
+想强制走本地通道（不经过服务器）测试：地址后面加 `?net=local`。
+
+---
+
+## 联机原理（为什么 4 个人能同步）
+
+- **房主权威**：房主跑完整模拟（怪物 AI、伤害、掉落、楼层），客户端只发输入。
+- **20Hz 快照**：房主每秒广播 20 次紧凑快照。地图**不传输**——只发 `{种子, 楼层}`，
+  每个客户端用同一份确定性生成器各算一份完全相同的地牢。
+- **客户端预测**：本机玩家的移动用**和房主同一份代码**（`src/game/motion.ts`）本地先算，
+  所以按下去立刻有反应；快照只用来纠偏（偏差 > 96 像素直接吸附，否则每次吃掉 30%）。
+- **插值**：队友与怪物向快照位置平滑插值，避免 20Hz 带来的跳动。
+- **传输可替换**：`src/lib/net/` 下是传输层抽象，Supabase 与同浏览器 BroadcastChannel
+  是同一套接口的两个实现；Supabase 客户端按需动态 import（216 kB 单独分包）。
+
+快照体积实测：4 人 + 42 只怪 + 40 个掉落 + 40 个抛射物的极端情况仍在 6 KB 以内
+（`tests/snapshot.test.ts` 里有断言守着）。
+
+---
 
 ## 本地开发
 
-需要先安装 [Node.js](https://nodejs.org/) 20 或更高版本（推荐 LTS）。
-装好后在项目目录里执行：
-
 ```bash
-npm install      # 安装依赖（只需执行一次）
-npm run dev      # 启动开发服务器，默认 http://localhost:5173
+npm install
+npm run dev      # 本地开发服务器
+npm test         # 单元测试（node:test，42 个用例）
+npm run build    # 类型检查 + 生产构建
 ```
 
-常用命令：
+> `npm test` 用的是 Node 内建的测试运行器。注意：它不做路径补全，所以 `src/` 里的
+> **相对值导入必须带 `.ts` 后缀**（`tsconfig` 已开 `allowImportingTsExtensions`）。
 
-| 命令 | 作用 |
-| --- | --- |
-| `npm run dev` | 启动开发服务器，改代码即时刷新 |
-| `npm run build` | 类型检查 + 打包到 `dist/`，产物就是最终要部署的静态文件 |
-| `npm run preview` | 本地预览 `dist/` 的构建结果 |
-| `npm test` | 运行游戏逻辑的单元测试 |
-| `npm run typecheck` | 只做 TypeScript 类型检查 |
-| `npm run check` | 类型检查 + 测试 + 构建，提交前跑一遍最稳 |
+---
 
-## 部署到 GitHub Pages
+## 配置 Supabase（想和不同网络的朋友玩才需要）
 
-### 第一次部署
+Supabase 侧**不需要建表、不需要写策略、不需要 Edge Function**：游戏只用 Realtime 的
+broadcast（广播）和 presence（在线状态），这两项开箱即用。
 
-1. **在 GitHub 上新建仓库**（例如 `mini-games`），**不要**勾选添加 README / .gitignore —— 本地已经有了。
-2. **把本地代码推上去**（在项目目录里执行，仓库地址换成你自己的）：
+1. https://supabase.com → 用 GitHub 登录 → **New project**
+   （Region 建议选 `Southeast Asia (Singapore)`）
+2. 等 1～2 分钟初始化完成
+3. 左侧 **Project Settings → API Keys**，复制两项：
+   - **Project URL**：`https://xxxxxxxx.supabase.co`
+   - **anon / public** key：很长、以 `eyJ` 开头的那串
+   > ⚠️ 不要用 `service_role` key（管理员密钥，绝不能进前端）
+4. 填进去：
+   - **本地**：把 `.env.example` 复制成 `.env.local`，填入这两个值
+   - **线上**：仓库 `Settings → Secrets and variables → Actions` 添加两个
+     Repository secret，名字必须是 `VITE_SUPABASE_URL` 和 `VITE_SUPABASE_ANON_KEY`，
+     然后重新跑一次 `Deploy to GitHub Pages`（值是**构建时**打进产物的，改完必须重新构建）
+5. 验证：进入任意房间，右上角应显示 `🌐 联机模式`
 
-   ```bash
-   git init -b main
-   git add .
-   git commit -m "feat: 小游戏合集初始版本"
-   git remote add origin https://github.com/<你的用户名>/mini-games.git
-   git push -u origin main
-   ```
+### 安全边界（如实说明）
 
-3. **打开仓库的 Pages 设置**：`Settings` → 左侧 `Pages` → 把 **Source** 改成 **GitHub Actions**
-   （不要选 "Deploy from a branch"，本项目由 Actions 工作流构建）。
-4. 回到仓库的 **Actions** 标签页，会看到 `Deploy to GitHub Pages` 正在运行。
-   第一次通常 1～2 分钟。跑完后访问：
+- `anon` key 会出现在公开的 JS 产物里，这是 Supabase 前端的标准做法：它只代表「匿名访客」，
+  而本项目没有建任何表，所以它只能用来收发房间内的实时消息。
+- 拿到 anon key 的人如果**猜到房间码**，理论上可以进同一个房间旁观。房间码是 4 位随机字符
+  （约 100 万种组合），对休闲联机够用；要做正式比赛可以给 `realtime.messages` 配置授权策略。
+- 想轮换密钥：Supabase 控制台轮换 → 更新 `.env.local` 与仓库 Secret → 重新部署。
 
-   ```
-   https://<你的用户名>.github.io/<仓库名>/
-   ```
-
-### 之后更新内容
-
-只要往 `main` 分支推代码就会自动重新构建并发布，不需要做别的：
-
-```bash
-git add .
-git commit -m "feat: 新增某个游戏"
-git push
-```
-
-### 如果构建失败
-
-- **`npm ci` 报错找不到 lock 文件**：确认 `package-lock.json` 已经提交进仓库（不要写进 `.gitignore`）。
-- **Pages 页面 404**：检查 `Settings → Pages` 的 Source 是否为 `GitHub Actions`；
-  另外部署完成后第一次访问有时需要等一两分钟。
-- **页面空白、控制台报资源 404**：说明资源的基路径不对。本项目用的是 `base: './'`，
-  这种情况下不应该出现；如果你手动改过 `vite.config.ts`，把它改回 `'./'`。
-
-## 双人联机对战（Supabase 配置）
-
-首页「双人联机对战」分区的 6 个游戏需要一条实时通道。项目用 **Supabase Realtime**
-（只用广播 + 在线状态，不建表、不存数据）。**没配置也能用**——会自动退化成
-「同一浏览器双标签页」模式，打开两个标签页就能自己试玩。
-
-配置步骤：
-
-1. 打开 <https://supabase.com>，用 GitHub 账号登录，新建一个项目
-   （Region 选 Southeast Asia (Singapore)，数据库密码随便设，我们用不到数据库）
-2. 等 1～2 分钟初始化完成，进入 **Project Settings → API Keys**，复制两样东西：
-   **Project URL**（形如 `https://abcdefgh.supabase.co`）和 **anon / public** key
-3. 本地开发：把 `.env.example` 复制成 `.env.local`，填上这两个值：
-
-   ```
-   VITE_SUPABASE_URL=https://xxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
-   ```
-
-4. 线上部署：在 GitHub 仓库 **Settings → Secrets and variables → Actions** 里
-   新建两个 Repository secret，名字要完全一致：
-
-   | Secret 名称 | 值 |
-   | --- | --- |
-   | `VITE_SUPABASE_URL` | 你的 Project URL |
-   | `VITE_SUPABASE_ANON_KEY` | 你的 anon key |
-
-   然后重新跑一次 Actions（或再 push 一次）即可生效。
-
-> **anon key 放在前端安全吗？** 安全。它本来就是设计成随前端下发给浏览器的，
-> 只代表「匿名访客」身份；本项目没有建任何表，所以它只能用来收发房间内的实时消息。
-> 想轮换：换掉 Supabase 的 key，再更新 `.env.local` 和仓库 secret 即可。
->
-> 需要知道的边界：拿到 anon key 的人如果**猜到房间码**，理论上可以进同一个房间旁观。
-> 房间码是 4 位随机字符（约 100 万种组合），对休闲对战够用；如果要做正式比赛，
-> 可以在 Supabase 里给 `realtime.messages` 配置授权策略来限制。
-
-### 怎么和朋友对战
-
-1. 打开任意一个联机游戏，点「创建房间」，会得到 4 位房间码和一条邀请链接
-2. 把链接发给朋友（对方打开即进入同一房间），或让对方输入房间码加入
-3. 两人到齐自动开局；中途刷新页面也能回到房间
-4. 房间页右上角会显示当前通道：`🌐 联机模式` 或 `🖥 双标签模式`
-
-想绕开 Supabase 用同一浏览器测试：把地址改成
-`#/gomoku?room=TEST&role=host&net=local`，再开另一个标签页用 `role=guest` 打开。
+---
 
 ## 目录结构
 
 ```
 mini-games/
 ├─ .github/workflows/deploy.yml   # 推送到 main 后自动构建并发布到 Pages
-├─ public/                        # 原样拷贝到 dist 的静态文件
-│  ├─ favicon.svg
-│  └─ .nojekyll
+├─ tests/                         # node:test 单元测试
+│  ├─ dungeon.test.ts             # 地牢生成：确定性、连通性、碰撞
+│  ├─ sim.test.ts                 # 战斗与推进规则
+│  ├─ snapshot.test.ts            # 快照打包 / 解包 / 体积 / 容错
+│  ├─ netcode.test.ts             # 客户端预测、纠偏、插值、换层
+│  ├─ bot.test.ts                 # 机器人跑全程（打怪→清层→下楼）
+│  └─ net.test.ts                 # 房间码、座位、排序
 ├─ src/
-│  ├─ main.tsx                    # 入口：挂载 React 应用
-│  ├─ App.tsx                     # 首页 + 按 hash 路由切换到具体游戏
+│  ├─ main.tsx                    # 入口
+│  ├─ App.tsx                     # 整站就是一个游戏
 │  ├─ styles.css                  # 全部样式
-│  ├─ lib/
-│  │  ├─ router.ts                # 极简 hash 路由（支持 ?room= 这类参数）
-│  │  ├─ storage.ts               # localStorage 里的最佳成绩
-│  │  ├─ canvas.ts / math.ts      # 画布与数值小工具
-│  │  ├─ config.ts                # 读取 Supabase 配置
-│  │  └─ net/                     # 联机传输层：Supabase / 同浏览器双标签
 │  ├─ components/
-│  │  ├─ GameFrame.tsx            # 游戏页共用的外框（标题、成绩、提示）
-│  │  └─ RoomGate.tsx             # 房间大厅、等待页、对局状态栏
-│  └─ games/
-│     ├─ registry.ts              # 游戏清单：单人 4 个 + 联机 6 个
-│     ├─ Snake.tsx    + snake/logic.ts      # 界面 + 纯逻辑
-│     ├─ Game2048.tsx + g2048/logic.ts      # 界面 + 纯逻辑
-│     ├─ Breakout.tsx + breakout/logic.ts   # 界面 + 物理逻辑
-│     ├─ Memory.tsx               # 逻辑较短，直接写在组件里
-│     └─ online/                  # 双人联机对战
-│        ├─ TicTacToe.tsx / Gomoku.tsx / ReactionDuel.tsx ...
-│        ├─ tictactoe/logic.ts 等 # 各游戏的纯逻辑
-│        └─ *.css                 # 各游戏自己的样式
-└─ tests/
-   ├─ logic.test.ts               # 2048 与贪吃蛇（14 个用例）
-   ├─ breakout.test.ts            # 打砖块物理（13 个用例）
-   ├─ tictactoe.test.ts           # 井字棋（6 个用例）
-   └─ ...                         # 其它联机游戏的逻辑测试
+│  │  ├─ GameView.tsx             # 游戏主界面：网络同步 / 输入 / 主循环 / HUD
+│  │  └─ Lobby.tsx                # 大厅、等待房间、通道徽章
+│  ├─ game/
+│  │  ├─ constants.ts             # 手感数值集中在这里
+│  │  ├─ rng.ts                   # 确定性随机（同种子同结果）
+│  │  ├─ types.ts                 # 世界与实体类型
+│  │  ├─ dungeon.ts               # 地牢生成 + 碰撞 + 视线
+│  │  ├─ world.ts                 # 楼层构建、怪物数值、掉落
+│  │  ├─ motion.ts                # 玩家运动（房主与客户端共用）
+│  │  ├─ sim.ts                   # 房主权威模拟：AI / 伤害 / 倒地 / 下楼
+│  │  ├─ snapshot.ts              # 快照打包解包（含不可信输入校验）
+│  │  ├─ netcode.ts               # 客户端预测与插值
+│  │  ├─ view.ts                  # 视图数据结构（渲染层契约）
+│  │  └─ render.ts                # canvas 渲染：瓦片 / 实体 / 火把 / 小地图
+│  └─ lib/
+│     ├─ config.ts                # 读 Supabase 配置
+│     ├─ router.ts                # 极简 hash 路由
+│     ├─ nickname.ts              # 昵称（本地保存）
+│     └─ net/                     # 传输层：Supabase / 同浏览器多标签
+└─ vite.config.ts
 ```
 
-> 测试用的是 Node 内置测试运行器，Node 22.6 以上可以直接运行 `.ts` 文件，
-> 所以项目没有引入 Jest / Vitest，`npm install` 只装 25 个包。
+---
 
-## 怎么再加一个游戏
+## 已知限制
 
-1. 在 `src/games/` 下新建组件，例如 `Pong.tsx`。
-2. 在 `src/games/registry.ts` 的 `GAMES` 数组里加一条记录
-   （`id` 就是访问地址 `#/pong`）。
-3. 在 `src/App.tsx` 的 `GAME_COMPONENTS` 里把 `id` 映射到组件。
-
-成绩记录用 `useBestScore('pong', 'max')` 即可，`'min'` 表示数值越小越好。
-
-## 技术栈
-
-React 19 · TypeScript · Vite · 原生 CSS · GitHub Actions
+- **操作以键鼠为主**：触屏虚拟摇杆还没做，手机上暂时只能看不能好好打。
+- **怪物没有寻路**：被墙挡住时会贴着墙走，不会绕路（小地图与走廊宽度已尽量弥补）。
+- **中途加入**：房主会把新队友加进当前楼层，但不会补发这一层已经发生的事件。
+- **真实网络延迟下的手感**只能在真实跨网络环境里感受；20Hz 广播 + 插值在几十毫秒延迟下
+  表现正常，但更高延迟没有实测过。
+- 房间码是 4 位、无鉴权，见上面的「安全边界」。

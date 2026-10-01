@@ -1,6 +1,10 @@
-/** 联机对战的传输层类型定义。 */
+/** 联机传输层的类型定义。 */
 
-export type Seat = 0 | 1;
+/** 座位号：0 是房主，一个房间最多 4 人。 */
+export type Seat = 0 | 1 | 2 | 3;
+
+/** 房间容量上限 */
+export const MAX_SEATS = 4;
 
 export type PlayerId = string;
 
@@ -63,7 +67,14 @@ export function getOrCreatePlayerId(): PlayerId {
 }
 
 export function seatLabel(seat: Seat): string {
-  return seat === 0 ? '玩家 1' : '玩家 2';
+  return `玩家 ${seat + 1}`;
+}
+
+/** 把任意数字收敛成合法座位号。 */
+export function toSeat(value: number): Seat {
+  if (value <= 0) return 0;
+  if (value >= 3) return 3;
+  return Math.round(value) as Seat;
 }
 
 /** 按座位排序，保证两端看到的成员顺序一致。 */
